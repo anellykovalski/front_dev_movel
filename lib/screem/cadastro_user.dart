@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CadastroUserPage extends StatefulWidget {
   @override
@@ -10,38 +12,47 @@ class _CadastroUserPageState extends State<CadastroUserPage> {
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final String jwtToken = 's234fddfs2';
 
-  void _register() {
+
+  Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
       String email = _emailController.text;
       String username = _usernameController.text;
       String password = _passwordController.text;
 
-      // Aqui você pode adicionar a lógica para enviar os dados para o banco de dados
-      // Exemplo de lógica para integração com um serviço de backend:
-
-      // Future<void> _sendDataToServer() async {
-      //   final response = await http.post(
-      //     Uri.parse('https://example.com/register'),
-      //     body: {
-      //       'email': email,
-      //       'username': username,
-      //       'password': password,
-      //     },
-      //   );
-      //   if (response.statusCode == 200) {
-      //     // Sucesso
-      //   } else {
-      //     // Erro
-      //   }
-      // }
-
-      // _sendDataToServer();
-
-      // Exemplo de mensagem de sucesso:
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Usuário cadastrado com sucesso!')),
+      // Requisição POST ao backend
+      final url = Uri.parse('http://localhost:3025/users');
+      final response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $jwtToken', // Incluindo o token JWT
+        },
+        body: jsonEncode(<String, String>{
+          'name': username,
+          'email': email,
+          'password': password,
+        }),
       );
+
+      // Verificando a resposta do servidor
+      if (response.statusCode == 200) {
+        // Sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Usuário cadastrado com sucesso!')),
+        );
+      } else if (response.statusCode == 400) {
+        // Email já existente
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Email já cadastrado.')),
+        );
+      } else {
+        // Outro erro
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao cadastrar o usuário.')),
+        );
+      }
     }
   }
 
@@ -122,12 +133,13 @@ class _CadastroUserPageState extends State<CadastroUserPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 40, width: 20,),
+              SizedBox(height: 40, width: 20),
               Center(
                 child: ElevatedButton(
                   onPressed: _register,
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.purple, backgroundColor: Colors.yellow,
+                    foregroundColor: Colors.purple,
+                    backgroundColor: Colors.yellow,
                   ),
                   child: Text('Cadastrar'),
                 ),
@@ -139,4 +151,3 @@ class _CadastroUserPageState extends State<CadastroUserPage> {
     );
   }
 }
-
