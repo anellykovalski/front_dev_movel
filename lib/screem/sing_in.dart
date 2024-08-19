@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-// ignore: unused_import
-import 'cadastro_user.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:login_prog_app/screem/cadastro_user.dart'; // Para manipular JSON
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -10,6 +12,50 @@ class LoginScreen extends StatelessWidget {
     final _formKey = GlobalKey<FormState>();
     final TextEditingController _emailController = TextEditingController();
     final TextEditingController _passwordController = TextEditingController();
+
+    Future<void> _login() async {
+      final email = _emailController.text;
+      final password = _passwordController.text;
+      final String jwtToken = 's234fddfs2';
+      final url = Uri.parse('http://localhost:3025/auth'); // Ajuste a URL conforme necessário
+
+      try {
+        final response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $jwtToken', // Incluindo o token JWT
+        },
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+          }),
+        );
+
+        if (response.statusCode == 201) {
+          final responseData = jsonDecode(response.body);
+          final token = responseData['access_token'];
+
+          // Armazene o token e navegue para a próxima tela
+          // Você pode usar um package como flutter_secure_storage para armazenar o token
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login bem-sucedido!')),
+          );
+
+          // Navegue para a tela principal ou qualquer outra tela
+          //Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Email ou senha incorretos')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao fazer login')),
+        );
+      }
+    }
 
     return Scaffold(
       body: Stack(
@@ -96,10 +142,7 @@ class LoginScreen extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              // Lógica de login aqui
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Processando login')),
-                              );
+                              _login();
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -118,13 +161,11 @@ class LoginScreen extends StatelessWidget {
                         width: double.infinity, // Botão com largura total
                         child: ElevatedButton(
                           onPressed: () {
-                            if (true) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => CadastroUserPage()),
-                              );
-                            }
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => CadastroUserPage()),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.amber, // Cor do botão
